@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register | Beyblade Team Event</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header"><div class="brand">🌀 Beyblade Team</div><nav><ul>
+<li><a href="index.html">Home</a></li><li><a href="roster.html">Roster</a></li><li><a href="register.html">Register</a></li><li><a href="rules.html">Rules</a></li><li><a href="team.html">Team</a></li><li><a href="links.html">Links</a></li></ul></nav></header>
+<main>
+<h1>Parent Registration</h1>
+<p class="note">🔒 This form is for parents/guardians only. The information goes privately to the organizer by email and is never shown on this site.</p>
+<!--
+  FORMSPREE SETUP: Create a form at https://formspree.io, copy its form ID
+  (the part after /f/, e.g. "xyzabcd"), and replace YOUR_FORM_ID in the
+  action URL below: https://formspree.io/f/xyzabcd
+-->
+<form class="card" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+<label for="parent_name">Parent/guardian name *</label>
+<input type="text" id="parent_name" name="parent_name" required autocomplete="name">
+<label for="parent_email">Parent email *</label>
+<input type="email" id="parent_email" name="parent_email" required autocomplete="email">
+<label for="parent_phone">Parent phone (optional)</label>
+<input type="tel" id="parent_phone" name="parent_phone" autocomplete="tel">
+<label for="participants">Number of participants *</label>
+<input type="number" id="participants" name="participants" min="1" max="10" value="1" required>
+<label for="nickname">Participant nickname or first initial only *</label>
+<input type="text" id="nickname" name="participant_nickname" maxlength="30" required placeholder="e.g. SpinKing or J.">
+<label for="age">Age bracket *</label>
+<select id="age" name="age_bracket" required><option value="">Choose…</option><option>Under 8</option><option>8–10</option><option>11–13</option><option>14–17</option></select>
+<label for="exp">Experience level *</label>
+<select id="exp" name="experience_level" required><option value="">Choose…</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+<label for="notes">Notes</label>
+<textarea id="notes" name="notes" rows="4"></textarea>
+<label class="check"><input type="checkbox" name="parent_consent" value="yes" required> I am the parent/guardian and consent to my child participating in this event. *</label>
+<button type="submit" class="btn">Submit Registration</button>
+</form>
+</main>
+<footer><p>Youth Beyblade Team Event. No kids' full names, emails or addresses are posted on this site.</p></footer>
+</body>
+</html>
