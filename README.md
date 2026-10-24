@@ -47,3 +47,14 @@ Columns: **slot** | **text**
 | `expect` | One row per “What to expect” bullet (repeat the slot) |
 
 Edit a cell once; every `data-site` spot on the site updates from `GET /exec?action=site`.
+
+### Site copy tabs (one per page)
+
+Tabs: **Copy_rules**, **Copy_links**, **Copy_home**, **Copy_team**
+
+Columns: **section** | **subsection** | **line** | **kind** | **text** | **url** | **label**
+
+- Reorder lines inside a subsection by changing **line** numbers — other sections stay put.
+- **url** is its own column (used by `link` / `link_item` kinds).
+- Cross-page event facts (dates, etc.) stay on **EventFacts**, not duplicated here.
+- Rules + links pages load from these tabs; home body facts stay on EventFacts; team members stay roster-driven.
