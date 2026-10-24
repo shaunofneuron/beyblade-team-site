@@ -7,6 +7,15 @@
       .replace(/"/g, "&quot;");
   }
 
+  function displayAge(v) {
+    var s = String(v == null ? "" : v).trim();
+    if (!s || s === "TBD") return "TBD";
+    // Normalize "8-10" / date leftovers to "8 to 10"
+    var m = s.match(/^(\d{1,2})\s*[-–/]\s*(\d{1,2})$/);
+    if (m) return m[1] + " to " + m[2];
+    return s;
+  }
+
   function render(webAppUrl) {
     var body = document.getElementById("roster-body");
     var countEl = document.getElementById("roster-count");
@@ -24,9 +33,10 @@
           return;
         }
         var entries = data.entries || [];
+        var max = data.maxPerTeam || 3;
         if (countEl) {
           countEl.textContent = entries.length
-            ? entries.length + " on the public roster (" + (data.registrations || entries.length) + " registration rows)."
+            ? entries.length + " on the public roster (max " + max + " per team)."
             : "No public nicknames yet. Register with a player nickname to appear here.";
         }
         if (!entries.length) {
@@ -35,7 +45,7 @@
         }
         body.innerHTML = entries.map(function (e, i) {
           return "<tr><td>" + (i + 1) + "</td><td>" + esc(e.nickname) + "</td><td>" +
-            esc(e.team || "Zen Blitz") + "</td><td>" + esc(e.ageBracket || "TBD") + "</td></tr>";
+            esc(e.team || "Zen Blitz") + "</td><td>" + esc(displayAge(e.ageBracket)) + "</td></tr>";
         }).join("");
       })
       .catch(function () {

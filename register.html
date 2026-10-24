@@ -20,7 +20,7 @@
 </header>
 <main>
   <h1>Parent Registration</h1>
-  <p class="note">🔒 Registration is for parents and guardians only. Emails stay private. Only the player nickname you enter can appear on the public roster.</p>
+  <p class="note">🔒 Registration is for parents and guardians only. Emails stay private. Only the player nickname you enter can appear on the public roster. Max 3 players per team.</p>
 
   <section class="card" id="reg-card">
     <h2>Sign up</h2>
@@ -35,10 +35,20 @@
         <input name="nickname" required maxlength="40" autocomplete="off">
       </label>
       <label>Team
-        <input name="team" value="Zen Blitz" maxlength="40">
+        <select name="team" id="team-select" required>
+          <option value="">Loading teams…</option>
+        </select>
       </label>
+      <div class="add-team">
+        <label>Or add a new team
+          <input type="text" id="new-team" maxlength="40" placeholder="New team name" autocomplete="off">
+        </label>
+        <button type="button" class="btn btn-secondary" id="add-team-btn">Add team</button>
+      </div>
       <label>Age bracket
-        <input name="ageBracket" placeholder="e.g. 8–10" maxlength="20">
+        <select name="ageBracket" id="age-select" required>
+          <option value="">Loading…</option>
+        </select>
       </label>
       <label>Notes (optional)
         <textarea name="message" rows="3" maxlength="2000"></textarea>

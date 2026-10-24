@@ -323,3 +323,32 @@ form#zen-reg .hp {
 }
 #zen-reg-status { min-height: 1.5em; color: var(--accent); }
 .muted { color: var(--muted); }
+
+form#zen-reg select {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-edge);
+  background: #0a1020;
+  color: var(--text);
+  font: inherit;
+}
+.add-team {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+  margin: 0.5rem 0 0.85rem;
+}
+.add-team label { margin: 0; }
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--panel-edge);
+  color: var(--text);
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+}

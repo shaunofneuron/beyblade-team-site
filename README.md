@@ -25,3 +25,11 @@ There is no Formspree or other third-party form endpoint in this repo.
 ## Privacy rule
 
 Never post kids’ full names, emails, or addresses on the site. Roster and team pages use nicknames or first initials only. Registration emails and parent names stay in the private sheet; only player nicknames appear on the roster.
+
+## Sheet-driven form options
+
+In the bound spreadsheet (`zen-blitz-form-filter`):
+
+- **AgeBrackets** tab — one label per row in column A (seeded with `7 to 10`). Add a row to offer a new bracket on the form.
+- **Teams** tab — one team name per row in column A (seeded with `Zen Blitz`). Add a row in the sheet **or** use “Add team” on the register form.
+- Teams are capped at **3** players (nicknamed registrations) each.
