@@ -237,13 +237,41 @@ ul.plain li { margin: 0.4rem 0; }
 
 .links {
   list-style: none;
-  padding: 0;
-  margin: 0;
+  /* Keep card padding; only clear list indent */
+  padding-left: 0;
+  margin: 1.5rem 0;
+}
+
+.card.links {
+  padding: 1.5rem 1.75rem;
 }
 
 .links li {
-  margin: 0.85rem 0;
+  margin: 0;
+  padding: 0.95rem 0;
   font-size: 1.05rem;
+  border-bottom: 1px solid var(--panel-edge);
+}
+
+.links li:first-child {
+  padding-top: 0.15rem;
+}
+
+.links li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0.15rem;
+}
+
+.links a {
+  display: inline-block;
+  padding: 0.15rem 0;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.links a:hover,
+.links a:focus {
+  text-decoration: underline;
 }
 
 footer {
