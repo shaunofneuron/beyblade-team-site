@@ -289,3 +289,37 @@ footer {
   th, td { padding: 0.65rem 0.75rem; font-size: 0.95rem; }
   main { padding: 1.5rem 1rem 2.5rem; }
 }
+
+/* Registration form */
+form#zen-reg label {
+  display: block;
+  margin: 0.85rem 0;
+  font-weight: 600;
+}
+form#zen-reg input,
+form#zen-reg textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-edge);
+  background: #0a1020;
+  color: var(--text);
+  font: inherit;
+}
+form#zen-reg button.btn {
+  margin-top: 0.75rem;
+  cursor: pointer;
+  border: none;
+}
+form#zen-reg .hp {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+#zen-reg-status { min-height: 1.5em; color: var(--accent); }
+.muted { color: var(--muted); }

@@ -20,16 +20,54 @@
 </header>
 <main>
   <h1>Parent Registration</h1>
-  <p class="note">🔒 Registration is for parents and guardians only. Details stay private and are never shown on this site.</p>
-  <section class="card coming-soon">
-    <h2>Google Form coming soon</h2>
-    <p>A Google Form registration link will be posted here when it is ready.</p>
-    <p>Check back on this page, or ask a host at the event for the latest signup info.</p>
-    <p><span class="btn disabled" aria-disabled="true">Registration form (coming soon)</span></p>
+  <p class="note">🔒 Registration is for parents and guardians only. Emails stay private. Only the player nickname you enter can appear on the public roster.</p>
+
+  <section class="card" id="reg-card">
+    <h2>Sign up</h2>
+    <form id="zen-reg" novalidate>
+      <label>Parent / guardian name
+        <input name="name" required autocomplete="name">
+      </label>
+      <label>Email
+        <input name="email" type="email" required autocomplete="email">
+      </label>
+      <label>Player nickname (shown on roster)
+        <input name="nickname" required maxlength="40" autocomplete="off">
+      </label>
+      <label>Team
+        <input name="team" value="Zen Blitz" maxlength="40">
+      </label>
+      <label>Age bracket
+        <input name="ageBracket" placeholder="e.g. 8–10" maxlength="20">
+      </label>
+      <label>Notes (optional)
+        <textarea name="message" rows="3" maxlength="2000"></textarea>
+      </label>
+      <label class="hp" aria-hidden="true">
+        Website <input name="website" tabindex="-1" autocomplete="off">
+      </label>
+      <button type="submit" class="btn">Submit registration</button>
+      <p id="zen-reg-status" role="status"></p>
+    </form>
+    <p class="muted" id="reg-config-missing" hidden>Registration endpoint is not configured for this build. Ask a host to inject <code>assets/form-config.js</code>.</p>
+  </section>
+
+  <section class="card" id="roster-preview">
+    <h2>Current roster</h2>
+    <p class="note">Nicknames only — pulled live from the registration sheet.</p>
+    <p id="roster-count" class="muted">Loading…</p>
+    <table>
+      <thead><tr><th>#</th><th>Nickname</th><th>Team</th><th>Age Bracket</th></tr></thead>
+      <tbody id="roster-body"><tr><td colspan="4" class="tbd">Loading…</td></tr></tbody>
+    </table>
+    <p><a href="roster.html">Open full roster page</a></p>
   </section>
 </main>
 <footer>
   <p>Zen Blitz youth Beyblade event. No kids’ full names, emails or addresses are posted on this site.</p>
 </footer>
+<script src="assets/form-config.js"></script>
+<script src="assets/roster.js"></script>
+<script src="assets/register.js"></script>
 </body>
 </html>

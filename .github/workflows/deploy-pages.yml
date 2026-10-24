@@ -1,0 +1,38 @@
+name: Deploy GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject form-config.js from secret (never committed)
+        env:
+          FORM_WEBAPP_URL: ${{ secrets.FORM_WEBAPP_URL }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          url = (os.environ.get("FORM_WEBAPP_URL") or "").strip()
+          open("assets/form-config.js", "w").write(
+              "window.ZEN_FORM_CONFIG = { webAppUrl: %s };\n" % json.dumps(url)
+          )
+          print("injected:", "yes" if url else "empty")
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

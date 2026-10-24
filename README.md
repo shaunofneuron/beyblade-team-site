@@ -16,12 +16,12 @@ Live URL (once Pages is on): https://shaunofneuron.github.io/beyblade-team-site/
 
 ## Registration (hard constraint)
 
-Parent registration will use a Google Form.
+Parent registration posts to a Google Apps Script web app (sheet-backed).
 
-**Do not commit** form IDs, field names, embed URLs, share links, or other form-related identifiers to this public repo. Keep those in a gitignored config, an environment secret, or another Pages-safe injection path that never lands in source. The “coming soon” placeholder on `register.html` stays until a non-source injection is wired.
+**Do not commit** form IDs, field names, embed URLs, share links, or other form-related identifiers to this public repo. Keep those in a gitignored config, an environment secret, or another Pages-safe injection path that never lands in source. Wire the web app `/exec` URL via gitignored `assets/form-config.js` (see `assets/form-config.example.js`) or CI secret injection — never commit the URL. Public roster shows nicknames only.
 
 There is no Formspree or other third-party form endpoint in this repo.
 
 ## Privacy rule
 
-Never post kids’ full names, emails, or addresses on the site. Roster and team pages use nicknames or first initials only. Registration details stay private (Google Form) and are never published on these pages.
+Never post kids’ full names, emails, or addresses on the site. Roster and team pages use nicknames or first initials only. Registration emails and parent names stay in the private sheet; only player nicknames appear on the roster.
