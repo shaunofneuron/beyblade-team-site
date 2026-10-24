@@ -33,3 +33,17 @@ In the bound spreadsheet (`zen-blitz-form-filter`):
 - **AgeBrackets** tab — one label per row in column A (seeded with `7 to 10`). Add a row to offer a new bracket on the form.
 - **Teams** tab — one team name per row in column A (seeded with `Zen Blitz`). Add a row in the sheet **or** use “Add team” on the register form.
 - Teams are capped at **3** players (nicknamed registrations) each.
+
+### EventFacts tab (single source of truth)
+
+Columns: **slot** | **text**
+
+| slot | meaning |
+|------|---------|
+| `dates` | Shown on the home banner, event details, and register pill |
+| `time` | Event details → time of day |
+| `location` | Event details → location |
+| `tagline` | Home hero line |
+| `expect` | One row per “What to expect” bullet (repeat the slot) |
+
+Edit a cell once; every `data-site` spot on the site updates from `GET /exec?action=site`.

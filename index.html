@@ -21,23 +21,23 @@
 <main>
   <section class="hero">
     <h1>Zen Blitz</h1>
-    <p class="tagline">A friendly Beyblade X tournament for young bladers and their families.</p>
-    <div class="event-banner">November 7th &amp; 8th</div>
+    <p class="tagline" data-site="tagline">A friendly Beyblade X tournament for young bladers and their families.</p>
+    <div class="event-banner" data-site="dates">November 7th &amp; 8th</div>
     <p><a class="btn" href="register.html">Register (parents)</a></p>
   </section>
 
   <section class="card">
     <h2>Event Details</h2>
     <ul class="plain">
-      <li><strong>Dates:</strong> November 7th and 8th</li>
-      <li><strong>Time of day:</strong> Evening or midday (exact times to be announced)</li>
-      <li><strong>Location:</strong> Shaun’s two-acre backyard</li>
+      <li><strong>Dates:</strong> <span data-site="dates">November 7th &amp; 8th</span></li>
+      <li><strong>Time of day:</strong> <span data-site="time">Evening or midday (exact times to be announced)</span></li>
+      <li><strong>Location:</strong> <span data-site="location">Shaun’s two-acre backyard</span></li>
     </ul>
   </section>
 
   <section class="card">
     <h2>What to Expect</h2>
-    <ul class="plain">
+    <ul class="plain" data-site="expect">
       <li>Check-in and warm-up battles</li>
       <li>Tournament rounds</li>
       <li>Finals and awards</li>
@@ -47,5 +47,7 @@
 <footer>
   <p>Zen Blitz youth Beyblade event. No kids’ full names, emails or addresses are posted on this site.</p>
 </footer>
+<script src="assets/form-config.js"></script>
+<script src="assets/site.js"></script>
 </body>
 </html>
