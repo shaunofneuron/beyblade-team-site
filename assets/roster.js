@@ -10,53 +10,69 @@
   function displayAge(v) {
     var s = String(v == null ? "" : v).trim();
     if (!s || s === "TBD") return "TBD";
-    // Normalize "8-10" / date leftovers to "8 to 10"
     var m = s.match(/^(\d{1,2})\s*[-–/]\s*(\d{1,2})$/);
     if (m) return m[1] + " to " + m[2];
     return s;
   }
 
+  function groupByTeam(entries) {
+    var map = {};
+    (entries || []).forEach(function (e) {
+      var team = String(e.team || "Zen Blitz").trim() || "Zen Blitz";
+      if (!map[team]) map[team] = [];
+      map[team].push(e);
+    });
+    return Object.keys(map).sort(function (a, b) {
+      return a.toLowerCase().localeCompare(b.toLowerCase());
+    }).map(function (team) {
+      var players = map[team].slice().sort(function (a, b) {
+        return String(a.nickname || "").toLowerCase()
+          .localeCompare(String(b.nickname || "").toLowerCase());
+      });
+      return { team: team, players: players };
+    });
+  }
+
   function render(webAppUrl) {
-    var body = document.getElementById("roster-body");
-    var countEl = document.getElementById("roster-count");
-    if (!body) return;
+    var root = document.getElementById("roster-root") || document.getElementById("roster-body");
+    if (!root) return;
     if (!webAppUrl) {
-      body.innerHTML = '<tr><td colspan="4" class="tbd">Roster endpoint not configured.</td></tr>';
-      if (countEl) countEl.textContent = "";
+      root.innerHTML = '<p class="tbd">Roster endpoint not configured.</p>';
       return;
     }
     fetch(webAppUrl + "?action=roster", { method: "GET", redirect: "follow" })
       .then(function (res) { return res.json(); })
       .then(function (data) {
         if (!data || !data.ok) {
-          body.innerHTML = '<tr><td colspan="4" class="tbd">Could not load roster.</td></tr>';
+          root.innerHTML = '<p class="tbd">Could not load roster.</p>';
           return;
         }
-        var entries = data.entries || [];
-        var max = data.maxPerTeam || 3;
-        if (countEl) {
-          countEl.textContent = entries.length
-            ? entries.length + " on the public roster (max " + max + " per team)."
-            : "No public nicknames yet. Register with a player nickname to appear here.";
-        }
-        if (!entries.length) {
-          body.innerHTML = '<tr><td colspan="4" class="tbd">No nicknames published yet.</td></tr>';
+        var groups = groupByTeam(data.entries || []);
+        if (!groups.length) {
+          root.innerHTML = '<p class="tbd">No nicknames published yet.</p>';
           return;
         }
-        body.innerHTML = entries.map(function (e, i) {
-          return "<tr><td>" + (i + 1) + "</td><td>" + esc(e.nickname) + "</td><td>" +
-            esc(e.team || "Zen Blitz") + "</td><td>" + esc(displayAge(e.ageBracket)) + "</td></tr>";
+        root.innerHTML = groups.map(function (g) {
+          var rows = g.players.map(function (e, i) {
+            return "<tr><td>" + (i + 1) + "</td><td>" + esc(e.nickname) +
+              "</td><td>" + esc(displayAge(e.ageBracket)) + "</td></tr>";
+          }).join("");
+          return '<section class="card roster-team">' +
+            "<h2>" + esc(g.team) + "</h2>" +
+            "<table><thead><tr><th>#</th><th>Nickname</th><th>Age Bracket</th></tr></thead>" +
+            "<tbody>" + rows + "</tbody></table></section>";
         }).join("");
       })
       .catch(function () {
-        body.innerHTML = '<tr><td colspan="4" class="tbd">Network error loading roster.</td></tr>';
+        root.innerHTML = '<p class="tbd">Network error loading roster.</p>';
       });
   }
 
   window.ZenRoster = { render: render };
 
   var cfg = window.ZEN_FORM_CONFIG || {};
-  if (document.getElementById("roster-body") && !(document.getElementById("zen-reg"))) {
+  if ((document.getElementById("roster-root") || document.getElementById("roster-body")) &&
+      !document.getElementById("zen-reg")) {
     render((cfg.webAppUrl || "").trim());
   }
 })();

@@ -352,3 +352,7 @@ form#zen-reg select {
   cursor: pointer;
   font: inherit;
 }
+
+.roster-team { margin-top: 1rem; }
+.roster-team h2 { margin-top: 0; font-size: 1.15rem; }
+.roster-team table { margin-top: 0.5rem; }
