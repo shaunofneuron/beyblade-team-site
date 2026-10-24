@@ -14,9 +14,13 @@ Static HTML/CSS site (no server code, database, or build step) for the Zen Blitz
 
 Live URL (once Pages is on): https://shaunofneuron.github.io/beyblade-team-site/
 
-## Registration
+## Registration (hard constraint)
 
-Parent registration will use a Google Form. When the form is ready, put its share link on `register.html` (replace the “coming soon” placeholder). There is no Formspree or other third-party form endpoint in this repo.
+Parent registration will use a Google Form.
+
+**Do not commit** form IDs, field names, embed URLs, share links, or other form-related identifiers to this public repo. Keep those in a gitignored config, an environment secret, or another Pages-safe injection path that never lands in source. The “coming soon” placeholder on `register.html` stays until a non-source injection is wired.
+
+There is no Formspree or other third-party form endpoint in this repo.
 
 ## Privacy rule
 

@@ -1,0 +1,6 @@
+# Local form injection (never commit)
+form-config.json
+form-config.js
+assets/form-config.js
+.env
+.env.*
