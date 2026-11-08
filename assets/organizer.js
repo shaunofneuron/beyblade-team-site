@@ -4,7 +4,7 @@
   var root = document.getElementById("org-root"), msg = document.getElementById("org-msg");
   var banner = document.getElementById("org-practice-banner"), tokenInput = document.getElementById("org-token");
   var KEY = "zbOrgToken", PRACTICE = "zbPracticeState";
-  var rev = 0, practice = false, lastOp = null;
+  var rev = 0, practice = false, lastOp = null, epoch = 0;
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -45,17 +45,19 @@
   function call(op, args) {
     if (practice) return callPractice(op, args);
     lastOp = [op, args];
+    var mine = ++epoch;
     say("Saving…");
     return fetch(url, { method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "ladderAdmin", token: localStorage.getItem(KEY) || "", rev: rev, op: op, args: args || {} }) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
+        if (practice || mine !== epoch) return;
         if (d.admin) { rev = d.admin.rev; draw(d.admin); }
         if (!d.ok && /stale/.test(d.error || "")) { say("Someone else saved first. The page is refreshed; tap again."); return; }
         if (!d.ok) { say(d.error === "unauthorized" ? "Key not accepted. Tap Forget key and enter it again." : "Not saved: " + (d.error || "error")); return; }
         say(op === "view" ? "Loaded." : "Saved.");
       })
-      .catch(function () { say("Network error. Nothing was saved; tap again."); });
+      .catch(function () { if (practice || mine !== epoch) return; say("Network error. Nothing was saved; tap again."); });
   }
 
   function draw(v) {
@@ -91,6 +93,7 @@
   }
 
   function setPractice(on) {
+    epoch++;
     practice = on;
     banner.hidden = !on;
     document.getElementById("org-practice-start").hidden = on;

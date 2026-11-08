@@ -4,14 +4,14 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 function page() {
-  const els = {}, store = {}, fetches = [];
+  const els = {}, store = {}, fetches = []; let impl = () => new Promise(() => {});
   const el = (id) => (els[id] ||= { id, innerHTML: "", textContent: "", hidden: false, value: "", handlers: {},
     addEventListener(t, f) { this.handlers[t] = f; } });
   const ctx = {
     window: { ZEN_FORM_CONFIG: { webAppUrl: "https://example.invalid/exec" }, confirm: () => true, prompt: () => "" },
     document: { getElementById: el, body: { classList: { toggle() {} } } },
     localStorage: { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } },
-    fetch: (...a) => { fetches.push(a); return new Promise(() => {}); },
+    fetch: (...a) => { fetches.push(a); return impl(...a); },
   };
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(__dirname + "/../assets/ladder-engine.js", "utf8"), ctx);
@@ -19,7 +19,7 @@ function page() {
   vm.runInContext(fs.readFileSync(__dirname + "/../assets/organizer.js", "utf8"), ctx);
   const click = (attrs) => els["org-root"].handlers.click({ target: { closest: () => ({ getAttribute: (k) => attrs[k.replace("data-", "")] ?? null }) } });
   const state = () => JSON.parse(store.zbPracticeState || "null");
-  return { els, store, fetches, click, state };
+  return { els, store, fetches, click, state, fetchImpl: (f) => { impl = f; } };
 }
 
 test("practice run goes from Swiss to champion with no network calls, then deletes cleanly", () => {
@@ -63,4 +63,22 @@ test("real mode sends winner taps to the backend with the remembered key", () =>
   p.click({ op: "win", id: "S1", pid: "P001" });
   const body = JSON.parse(p.fetches.at(-1)[1].body);
   assert.deepEqual([body.op, body.args.id, body.args.pid, body.token], ["win", "S1", "P001", "k"]);
+});
+
+test("practice still works when unlocked and a real response lands after practice starts", async () => {
+  const p = page();
+  let resolveReal;
+  p.fetchImpl((...a) => new Promise((r) => { resolveReal = r; }));
+  p.els["org-token"].value = "k";
+  p.els["org-login"].handlers.submit({ preventDefault() {} });
+  p.els["org-practice-start"].handlers.click();
+  const real = { ok: true, admin: { rev: 5, open: [{ id: "S9", a: "P001", b: "P002", aName: "REAL KID", bName: "REAL KID 2", to: 5 }],
+    undoable: [], standings: [], players: [], pending: [], suggest: { swissRounds: 3, topCut: 4, note: "" }, finals: null } };
+  resolveReal({ json: () => real });
+  await new Promise((r) => setTimeout(r, 10));
+  assert.ok(!p.els["org-root"].innerHTML.includes("REAL KID"), "late real response must not replace practice view");
+  assert.equal(p.els["org-practice-banner"].hidden, false);
+  p.click({ op: "newRound" });
+  assert.equal(p.state().swiss.rounds.length, 1);
+  assert.match(p.els["org-root"].innerHTML, /Practice/);
 });
