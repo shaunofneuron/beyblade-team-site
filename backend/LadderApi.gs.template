@@ -73,6 +73,8 @@ function ladderAdmin_(body) {
       case 'link': out = ZenLadder.link(s, a.key, a.pid); break;
       case 'newRound': out = ZenLadder.newRound(s).n; break;
       case 'supplemental': out = ZenLadder.supplemental(s).length; break;
+      case 'win': out = ZenLadder.reportWinner(s, a.id, a.pid).id; break;
+      case 'undo': out = ZenLadder.undo(s, a.id).id; break;
       case 'report': out = ZenLadder.report(s, a.id, a.sa, a.sb).id; break;
       case 'seedFinals': out = ZenLadder.seedFinals(s, Number(a.topCut), a.override || null).seeds.length; break;
       case 'withdraw': ZenLadder.withdraw(s, a.pid); break;
@@ -91,16 +93,7 @@ function ladderAdmin_(body) {
 }
 
 function ladderAdminView_(s) {
-  var v = ZenLadder.publicView(s);
-  v.players = s.order.map(function (pid, i) {
-    var p = s.participants[pid];
-    return { pid: pid, name: p.name || 'Blader ' + (i + 1), team: p.team, status: p.status, nameLock: p.nameLock };
-  });
-  v.open = ZenLadder.openMatches(s).map(function (m) { return { id: m.id, a: m.a, b: m.b, to: m.to }; });
-  v.pending = s.pending.map(function (x) { return { key: x.key, nickname: x.entry.nickname || '' }; });
-  v.rev = s.rev || 0;
-  v.suggest = ZenLadder.suggest(s.order.filter(function (p) { return s.participants[p].status === 'active'; }).length);
-  return v;
+  return ZenLadder.adminView(s);
 }
 
 function ladderJson_(obj) {

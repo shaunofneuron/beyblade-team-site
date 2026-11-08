@@ -152,7 +152,7 @@
       }).sort(function (x, y) { return (short.indexOf(x) < 0) - (short.indexOf(y) < 0); })[0];
       if (!opp) return;
       busy[a] = busy[opp] = 1;
-      var m = mk(s, "X", a, opp, SWISS_TO); s.swiss.supplemental.push(m); out.push(m);
+      var m = mk(s, "X", a, opp, SWISS_TO); m.afterRound = s.swiss.rounds.length; s.swiss.supplemental.push(m); out.push(m);
     });
     return out;
   }
@@ -165,13 +165,52 @@
     var isFinal = id.charAt(0) === "F";
     if (isFinal && m.winner) throw new Refuse("finals result already recorded; use correctFinal");
     if (!isFinal && m.winner && s.finals) throw new Refuse("finals seeded; Swiss results locked");
-    m.sa = sa; m.sb = sb; m.winner = sa > sb ? m.a : m.b; m.reportedAt = now();
+    m.sa = sa; m.sb = sb; m.scoreKnown = true; m.winner = sa > sb ? m.a : m.b; m.reportedAt = now();
     s.log.push([now(), "report", id, sa, sb]);
     if (isFinal) advance(s);
     return m;
   }
+  // Winner known, score not recorded: stored with null scores, never a made-up score.
+  function reportWinner(s, id, pid) {
+    var m = allMatches(s).filter(function (x) { return x.id === id; })[0];
+    if (!m || !m.b) throw new Refuse("no such match " + id);
+    if (pid !== m.a && pid !== m.b) throw new Refuse("winner must be a player in " + id);
+    var isFinal = id.charAt(0) === "F";
+    if (m.winner && (isFinal || s.finals)) throw new Refuse("result already recorded; undo it first");
+    m.sa = null; m.sb = null; m.scoreKnown = false; m.winner = pid; m.reportedAt = now();
+    s.log.push([now(), "win", id, pid]);
+    if (isFinal) advance(s);
+    return m;
+  }
+  function undoCheck(s, id) {
+    if (s.finals && s.finals.rounds.some(function (r) { return r.some(function (m) { return m.id === id; }); })) {
+      var rs = s.finals.rounds, k = -1, m = null;
+      rs.forEach(function (r, i) { r.forEach(function (x) { if (x.id === id) { k = i; m = x; } }); });
+      if (!m.b || !m.winner) return null;
+      var next = rs[k + 1];
+      if (next && next.some(function (x) { return x.winner && x.b; })) return null;
+      return { m: m, finalsRound: k };
+    }
+    if (s.finals) return null;
+    var m2 = null, rn = 0;
+    s.swiss.rounds.forEach(function (r) { r.matches.forEach(function (x) { if (x.id === id) { m2 = x; rn = r.n; } }); });
+    if (!m2) { m2 = s.swiss.supplemental.filter(function (x) { return x.id === id; })[0]; rn = m2 ? m2.afterRound : 0; }
+    if (!m2 || !m2.winner || s.swiss.rounds.length !== rn) return null;
+    return { m: m2 };
+  }
+  function undoable(s) { return allMatches(s).filter(function (m) { return m.winner && m.b && undoCheck(s, m.id); }).map(function (m) { return m.id; }); }
+  function undo(s, id) {
+    var u = undoCheck(s, id);
+    if (!u) throw new Refuse("can't undo " + id + ": later matches depend on it");
+    if (u.finalsRound != null) { s.finals.rounds.length = u.finalsRound + 1; s.finals.champion = null; }
+    u.m.sa = null; u.m.sb = null; u.m.winner = null; delete u.m.scoreKnown;
+    s.log.push([now(), "undo", id]);
+    return u.m;
+  }
   function seedFinals(s, topCut, override) {
     if (s.finals) throw new Refuse("finals already seeded");
+    topCut = Number(topCut);
+    if (!(topCut >= 2)) throw new Refuse("top cut must be at least 2");
     if (openMatches(s).length) throw new Refuse("finish open matches first");
     var st = standings(s), elig = eligible(s);
     var short = st.filter(function (r) { return elig.indexOf(r.pid) >= 0 && r.bouts < MIN_BOUTS; });
@@ -211,7 +250,7 @@
     var L = function (pid) { return pid ? label(s, pid) : null; };
     var team = function (pid) { return pid ? s.participants[pid].team : null; };
     var pm = function (m) { return { id: m.id, a: L(m.a), aTeam: team(m.a), b: L(m.b), bTeam: team(m.b),
-      sa: m.sa, sb: m.sb, winner: L(m.winner) }; };
+      sa: m.sa, sb: m.sb, scoreKnown: m.scoreKnown !== false, winner: L(m.winner) }; };
     return {
       swissTo: SWISS_TO, finalsTo: FINALS_TO,
       standings: standings(s).filter(function (r) { return s.participants[r.pid].status !== "late"; }).map(function (r, i) {
@@ -224,14 +263,31 @@
         champion: L(s.finals.champion) }
     };
   }
+  // Organizer view: display names and player IDs only; no source keys or private names.
+  function adminView(s) {
+    var v = publicView(s), nm = function (pid) { return label(s, pid); };
+    v.players = s.order.map(function (pid) {
+      var p = s.participants[pid];
+      return { pid: pid, name: nm(pid), team: p.team, status: p.status, nameLock: p.nameLock };
+    });
+    v.open = openMatches(s).map(function (m) { return { id: m.id, a: m.a, b: m.b, aName: nm(m.a), bName: nm(m.b), to: m.to }; });
+    v.undoable = undoable(s).map(function (id) {
+      var m = allMatches(s).filter(function (x) { return x.id === id; })[0];
+      return { id: id, winner: nm(m.winner), loser: nm(m.winner === m.a ? m.b : m.a) };
+    });
+    v.pending = s.pending.map(function (x) { return { key: x.key, nickname: x.entry.nickname || "" }; });
+    v.suggest = suggest(s.order.filter(function (p) { return s.participants[p].status === "active"; }).length);
+    v.rev = s.rev || 0;
+    return v;
+  }
   function suggest(n) {
     var rounds = Math.max(3, Math.ceil(Math.log(Math.max(n, 2)) / Math.LN2));
     return { swissRounds: Math.min(rounds, 5), topCut: n >= 12 ? 8 : 4, note: "Zen Blitz default, not a WBO requirement" };
   }
 
   var api = { Refuse: Refuse, newState: newState, sync: sync, link: link, rename: rename, unlockName: unlockName,
-    withdraw: withdraw, reinstate: reinstate, newRound: newRound, supplemental: supplemental, report: report,
-    seedFinals: seedFinals, standings: standings, openMatches: openMatches, publicView: publicView, suggest: suggest,
+    withdraw: withdraw, reinstate: reinstate, newRound: newRound, supplemental: supplemental, report: report, reportWinner: reportWinner, undo: undo, undoable: undoable,
+    seedFinals: seedFinals, standings: standings, openMatches: openMatches, publicView: publicView, adminView: adminView, suggest: suggest,
     SWISS_TO: SWISS_TO, FINALS_TO: FINALS_TO, MIN_BOUTS: MIN_BOUTS };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.ZenLadder = api;
 })(this);
