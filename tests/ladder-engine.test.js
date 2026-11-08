@@ -79,3 +79,28 @@ test("public view exposes nickname/team only, no source keys", () => {
   const v = JSON.stringify(L.publicView(s));
   assert.ok(!v.includes("Real Kid") && !v.includes("h1")); assert.match(v, /Blader 1/);
 });
+
+test("winner-only result records no fake score and counts as a win", () => {
+  const s = seeded("ABCD"); L.newRound(s); const m = L.openMatches(s)[0];
+  L.reportWinner(s, m.id, m.b);
+  assert.equal(m.winner, m.b); assert.equal(m.sa, null); assert.equal(m.scoreKnown, false);
+  const st = Object.fromEntries(L.standings(s).map(r => [r.pid, r]));
+  assert.equal(st[m.b].wins, 1); assert.equal(st[m.a].bouts, 1);
+});
+test("undo swiss result allowed until next round exists", () => {
+  const s = seeded("ABCD"); L.newRound(s); const m = L.openMatches(s)[0];
+  L.reportWinner(s, m.id, m.a); assert.deepEqual(L.undoable(s), [m.id]);
+  L.undo(s, m.id); assert.equal(m.winner, null);
+  play(s); L.newRound(s); assert.throws(() => L.undo(s, s.swiss.rounds[0].matches[0].id), L.Refuse);
+});
+test("undo finals result removes unplayed next round only", () => {
+  const s = seeded("ABCD"); for (let i = 0; i < 2; i++) { L.newRound(s); play(s); }
+  for (let i = 0; i < 2 && L.standings(s).some(r => r.bouts < 2); i++) { L.supplemental(s); play(s); }
+  L.seedFinals(s, 4); const f = s.finals, r0 = f.rounds[0];
+  L.reportWinner(s, r0[0].id, r0[0].a); L.reportWinner(s, r0[1].id, r0[1].a);
+  assert.equal(f.rounds.length, 2);
+  L.undo(s, r0[1].id); assert.equal(f.rounds.length, 1); assert.equal(r0[1].winner, null);
+  L.reportWinner(s, r0[1].id, r0[1].b); L.reportWinner(s, f.rounds[1][0].id, f.rounds[1][0].a);
+  assert.throws(() => L.undo(s, r0[0].id), L.Refuse);
+  L.undo(s, f.rounds[1][0].id); assert.equal(f.champion, null);
+});

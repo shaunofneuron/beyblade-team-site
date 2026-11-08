@@ -22,8 +22,15 @@
 </header>
 <main>
   <h1>Organizer Scoring</h1>
-  <p class="note">Organizers only. Every change is checked against the organizer key on the server; this page cannot change anything without it. The key is kept only for this browser tab.</p>
-  <form id="org-login"><input id="org-token" type="password" autocomplete="off" placeholder="Organizer key" required> <button>Unlock</button></form>
+  <p class="note">Organizers only. Every change is checked against the organizer key on the server; this page cannot change anything without it. </p>
+  <div id="org-practice-banner" class="card" hidden style="background:#ffe08a;color:#222;border:3px solid #c80;">
+    <strong>PRACTICE MODE: made-up players, saved only in this browser. Nothing here touches the real tournament.</strong>
+    <button id="org-practice-exit" type="button">Back to real tournament</button>
+    <button id="org-practice-delete" type="button">Delete practice run</button>
+  </div>
+  <p><button id="org-practice-start" type="button">Start a practice run</button></p>
+  <form id="org-login"><input id="org-token" type="password" autocomplete="off" placeholder="Organizer key" required> <button>Unlock</button> <button id="org-forget" type="button">Forget key</button></form>
+  <p class="note">The key is remembered on this device until you tap Forget key. Only unlock on your own phone or laptop.</p>
   <p id="org-msg" class="note"></p>
   <div id="org-root"></div>
 </main>
@@ -31,6 +38,7 @@
   <p>Zen Blitz youth Beyblade event. No kids’ full names, emails or addresses are posted on this site.</p>
 </footer>
 <script src="assets/form-config.js"></script>
+<script src="assets/ladder-engine.js"></script>
 <script src="assets/organizer.js"></script>
 </body>
 </html>

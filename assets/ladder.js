@@ -3,7 +3,7 @@
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function matchRow(m) {
-    var score = m.winner ? esc(m.sa) + "–" + esc(m.sb) : "vs";
+    var score = m.winner ? (m.scoreKnown === false || m.sa == null ? "won" : esc(m.sa) + "–" + esc(m.sb)) : "vs";
     var a = m.winner && m.winner === m.a ? "<strong>" + esc(m.a) + "</strong>" : esc(m.a);
     var b = m.b == null ? "<em>bye</em>" : (m.winner && m.winner === m.b ? "<strong>" + esc(m.b) + "</strong>" : esc(m.b));
     return "<tr><td>" + a + "</td><td>" + score + "</td><td>" + b + "</td></tr>";
