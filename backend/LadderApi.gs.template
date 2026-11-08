@@ -1,0 +1,108 @@
+/**
+ * Zen Blitz ladder backend TEMPLATE. Not deployed. Review before adding to the Apps Script project.
+ *
+ * Add two files to the existing Apps Script project:
+ *   1. assets/ladder-engine.js from this repo, pasted as LadderEngine.gs (defines ZenLadder globally).
+ *   2. This file, as LadderApi.gs.
+ * Then route requests from the existing handlers:
+ *   doGet:  if (action === 'ladder') return ladderPublic_();
+ *   doPost: if (body.action === 'ladderAdmin') return ladderAdmin_(body);
+ *
+ * Prerequisites (not in this repo, by design):
+ *   - Script property ORGANIZER_TOKEN: a long random string shared only with organizers.
+ *   - A private function ladderSourceEntries_() in the project returning
+ *     [{ id, nickname, team, ageBracket, privateName }] where id is a STABLE per-registration
+ *     identifier (for example a hash of a unique column, or a dedicated id column). Never a row
+ *     number or display name. privateName stays in the private state and is never returned.
+ *   - The organizer key travels only in the POST body, never in a URL. Admin responses carry
+ *     display names and player IDs only; privateName and source ids never leave the sheet.
+ *   - Writes are serialized with LockService and checked against a revision number, so a stale
+ *     organizer tab cannot overwrite newer results.
+ *   - State lives in a tab named LadderState in the same private spreadsheet (created on first save).
+ */
+var LADDER_STATE_SHEET = 'LadderState';
+var LADDER_CHUNK = 40000;
+
+function ladderLoad_() {
+  var sh = SpreadsheetApp.getActive().getSheetByName(LADDER_STATE_SHEET);
+  if (!sh || sh.getLastRow() < 1) return ZenLadder.newState();
+  var parts = sh.getRange(1, 1, sh.getLastRow(), 1).getValues().map(function (r) { return r[0]; });
+  return JSON.parse(parts.join(''));
+}
+
+function ladderWriteTab_(name, json) {
+  var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName(name) || ss.insertSheet(name);
+  var rows = [];
+  for (var i = 0; i < json.length; i += LADDER_CHUNK) rows.push([json.slice(i, i + LADDER_CHUNK)]);
+  sh.getRange(1, 1, rows.length, 1).setValues(rows);
+  var extra = sh.getLastRow() - rows.length;
+  if (extra > 0) sh.getRange(rows.length + 1, 1, extra, 1).clearContent();
+}
+
+// Copies the previous state to a backup tab first, so a failed write can be restored by hand.
+function ladderSave_(state, prevJson) {
+  if (prevJson) ladderWriteTab_(LADDER_STATE_SHEET + 'Backup', prevJson);
+  state.rev = (state.rev || 0) + 1;
+  ladderWriteTab_(LADDER_STATE_SHEET, JSON.stringify(state));
+}
+
+function ladderPublic_() {
+  return ladderJson_({ ok: true, ladder: ZenLadder.publicView(ladderLoad_()) });
+}
+
+function ladderTokenOk_(token) {
+  var want = PropertiesService.getScriptProperties().getProperty('ORGANIZER_TOKEN');
+  if (!want || !token) return false;
+  var d = function (s) { return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s))); };
+  return d(want) === d(token);
+}
+
+function ladderAdmin_(body) {
+  if (!ladderTokenOk_(body.token)) return ladderJson_({ ok: false, error: 'unauthorized' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var s = ladderLoad_(), prevJson = JSON.stringify(s), a = body.args || {}, out = null;
+    if (body.op !== 'view' && Number(body.rev) !== (s.rev || 0)) {
+      return ladderJson_({ ok: false, error: 'stale: someone else saved first; reload', admin: ladderAdminView_(s) });
+    }
+    switch (body.op) {
+      case 'view': break;
+      case 'sync': out = ZenLadder.sync(s, ladderSourceEntries_()); break;
+      case 'link': out = ZenLadder.link(s, a.key, a.pid); break;
+      case 'newRound': out = ZenLadder.newRound(s).n; break;
+      case 'supplemental': out = ZenLadder.supplemental(s).length; break;
+      case 'report': out = ZenLadder.report(s, a.id, a.sa, a.sb).id; break;
+      case 'seedFinals': out = ZenLadder.seedFinals(s, Number(a.topCut), a.override || null).seeds.length; break;
+      case 'withdraw': ZenLadder.withdraw(s, a.pid); break;
+      case 'reinstate': ZenLadder.reinstate(s, a.pid); break;
+      case 'rename': ZenLadder.rename(s, a.pid, String(a.name || '').slice(0, 40)); break;
+      case 'unlockName': ZenLadder.unlockName(s, a.pid); break;
+      default: return ladderJson_({ ok: false, error: 'unknown_op' });
+    }
+    if (body.op !== 'view') ladderSave_(s, prevJson);
+    return ladderJson_({ ok: true, result: out, admin: ladderAdminView_(s) });
+  } catch (err) {
+    return ladderJson_({ ok: false, error: err && err.name === 'Refuse' ? err.message : 'server_error' });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function ladderAdminView_(s) {
+  var v = ZenLadder.publicView(s);
+  v.players = s.order.map(function (pid, i) {
+    var p = s.participants[pid];
+    return { pid: pid, name: p.name || 'Blader ' + (i + 1), team: p.team, status: p.status, nameLock: p.nameLock };
+  });
+  v.open = ZenLadder.openMatches(s).map(function (m) { return { id: m.id, a: m.a, b: m.b, to: m.to }; });
+  v.pending = s.pending.map(function (x) { return { key: x.key, nickname: x.entry.nickname || '' }; });
+  v.rev = s.rev || 0;
+  v.suggest = ZenLadder.suggest(s.order.filter(function (p) { return s.participants[p].status === 'active'; }).length);
+  return v;
+}
+
+function ladderJson_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
