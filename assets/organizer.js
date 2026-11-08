@@ -106,7 +106,9 @@
   document.getElementById("org-forget").addEventListener("click", function () {
     localStorage.removeItem(KEY); root.innerHTML = ""; say("Key forgotten on this device.");
   });
-  document.getElementById("org-practice-start").addEventListener("click", function () { setPractice(true); });
+  document.getElementById("org-practice-start").addEventListener("click", function () {
+    try { setPractice(true); } catch (e) { say("Practice could not start: " + (e.message || e) + ". Reload the page."); }
+  });
   document.getElementById("org-practice-exit").addEventListener("click", function () { setPractice(false); });
   document.getElementById("org-practice-delete").addEventListener("click", function () {
     if (!window.confirm("Delete the practice run? The real tournament is not affected.")) return;
@@ -131,5 +133,6 @@
   });
 
   if (!url) { say("Endpoint not configured. Practice still works."); }
+  window.ZEN_ORGANIZER_READY = true;
   setPractice(false);
 })();
